@@ -1,0 +1,221 @@
+DOKUMENTASI WORKFLOW
+SISTEM PERMOHONAN IZIN KARYAWAN
+==================================================
+
+Dokumen ini menjelaskan cara kerja workflow n8n
+yang digunakan untuk mengelola proses perizinan karyawan
+secara otomatis, terstruktur, dan terdokumentasi.
+
+Dokumentasi ini ditujukan untuk:
+- Pengguna non-teknis (HR / Atasan)
+- Reviewer / Auditor sistem
+- Developer yang akan melanjutkan pengembangan
+
+--------------------------------------------------
+
+1. TUJUAN SISTEM
+--------------------------------------------------
+Sistem ini dibuat untuk:
+- Menghilangkan proses perizinan manual
+- Mengurangi kesalahan input data
+- Mempercepat persetujuan izin
+- Menyediakan jejak proses (audit trail)
+- Mengirim notifikasi otomatis ke pihak terkait
+
+--------------------------------------------------
+
+2. KOMPONEN UTAMA SISTEM
+--------------------------------------------------
+
+Sistem terdiri dari beberapa komponen yang saling terhubung:
+
+1) Google Form
+   - Digunakan oleh karyawan untuk:
+     • Mengajukan izin
+     • Mengisi realisasi izin
+
+2) Google Sheets
+   - Berfungsi sebagai database utama
+   - Menyimpan seluruh data pengajuan, status, dan realisasi
+
+3) n8n Workflow
+   - Mengatur alur logika dan automasi
+   - Mengirim notifikasi
+   - Mengelola validasi data
+
+4) Google Apps Script
+   - Menyediakan tombol aksi:
+     • Setujui
+     • Tolak
+     • Verifikasi
+
+5) Email (Gmail)
+   - Digunakan untuk komunikasi resmi dan notifikasi
+
+6) Telegram Bot
+   - Digunakan untuk notifikasi cepat kepada atasan dan HR
+
+--------------------------------------------------
+
+3. GAMBARAN UMUM ALUR WORKFLOW
+--------------------------------------------------
+
+Secara garis besar, workflow berjalan dalam 4 tahap utama:
+
+1) Pengajuan Izin
+2) Persetujuan Atasan
+3) Verifikasi HR
+4) Realisasi Izin
+
+Setiap tahap akan dijelaskan secara detail pada bagian berikut.
+
+--------------------------------------------------
+
+4. TAHAP 1 – PENGAJUAN IZIN
+--------------------------------------------------
+
+1) Karyawan mengisi Form Pengajuan Izin
+2) Data otomatis masuk ke Sheet "Pengajuan"
+3) Sistem membuat:
+   - ID Unik
+   - Timestamp pengajuan
+4) Status awal:
+   - Status Atasan = Pending
+   - Status HR = Pending
+
+5) Workflow n8n akan:
+   - Mengirim email notifikasi ke Atasan
+   - Mengirim notifikasi Telegram ke Atasan
+   - Mengirim email konfirmasi ke Karyawan
+
+Catatan:
+- Karyawan tidak dapat mengubah status secara manual
+- Seluruh status dikontrol oleh sistem
+
+--------------------------------------------------
+
+5. TAHAP 2 – PERSETUJUAN ATASAN
+--------------------------------------------------
+
+1) Atasan menerima:
+   - Email pengajuan izin
+   - Notifikasi Telegram
+
+2) Di dalam email terdapat tombol:
+   - SETUJUI
+   - TOLAK
+
+3) Ketika tombol diklik:
+   - Google Apps Script dijalankan
+   - Kolom "Status Atasan" di-update
+
+4) Jika Status Atasan = Disetujui:
+   - Workflow melanjutkan ke tahap HR
+   - Email dikirim ke HR untuk verifikasi
+
+5) Jika Status Atasan = Ditolak:
+   - Workflow berhenti
+   - Karyawan menerima email penolakan
+
+--------------------------------------------------
+
+6. TAHAP 3 – VERIFIKASI HR
+--------------------------------------------------
+
+1) HR menerima email pengajuan yang telah disetujui atasan
+2) HR meninjau data izin
+3) HR menekan tombol:
+   - VERIFIKASI
+   - TOLAK
+
+4) Sistem memperbarui:
+   - Status HR
+
+5) Jika Status HR = Disetujui:
+   - Karyawan menerima email persetujuan akhir
+   - Karyawan diarahkan untuk mengisi Form Realisasi
+
+6) Jika Status HR = Ditolak:
+   - Karyawan menerima email penolakan
+
+--------------------------------------------------
+
+7. TAHAP 4 – REALISASI IZIN
+--------------------------------------------------
+
+1) Karyawan mengisi Form Realisasi Izin
+2) Karyawan wajib mengisi:
+   - ID Unik pengajuan izin
+
+3) Data masuk ke Sheet "Realisasi"
+4) Workflow melakukan validasi:
+   - ID Unik tidak boleh kosong
+   - ID Unik harus terdaftar
+
+5) Workflow akan:
+   - Mengambil data Nama dan NIK dari Sheet Pengajuan
+   - Menyimpan data realisasi ke Sheet Realisasi
+   - Mengirim email ke HR
+   - Mengirim email konfirmasi ke Karyawan
+   - Mengirim notifikasi Telegram ke HR
+
+--------------------------------------------------
+
+8. LOGIKA VALIDASI & PENGAMAN SISTEM
+--------------------------------------------------
+
+Sistem menerapkan beberapa pengaman otomatis:
+
+1) ID Unik sebagai kunci utama
+2) Status hanya bisa diubah melalui tombol resmi
+3) Realisasi hanya bisa diproses jika:
+   - Status Atasan = Disetujui
+   - Status HR = Disetujui
+4) Workflow akan berhenti jika data tidak valid
+
+--------------------------------------------------
+
+9. NOTIFIKASI OTOMATIS
+--------------------------------------------------
+
+Notifikasi dikirim pada kondisi berikut:
+
+- Pengajuan baru → Atasan & Karyawan
+- Persetujuan Atasan → HR
+- Keputusan HR → Karyawan
+- Realisasi izin → HR & Karyawan
+
+Media notifikasi:
+- Email (resmi)
+- Telegram (cepat)
+
+--------------------------------------------------
+
+10. KEAMANAN & BATASAN SISTEM
+--------------------------------------------------
+
+- Credential tidak disimpan dalam file workflow
+- Token dan akses dikelola oleh n8n Credential Manager
+- Workflow JSON hanya berisi logika dan struktur
+- Spreadsheet tidak diedit manual untuk status
+
+--------------------------------------------------
+
+11. CATATAN UNTUK PENGEMBANG
+--------------------------------------------------
+
+Jika workflow ingin dikembangkan lebih lanjut:
+- Pastikan konsistensi nama kolom
+- Jangan mengubah ID Unik
+- Uji workflow di environment terpisah
+- Dokumentasikan setiap perubahan
+
+--------------------------------------------------
+
+12. RINGKASAN SINGKAT
+--------------------------------------------------
+
+Sistem ini mengotomatisasi proses perizinan karyawan
+dari awal hingga akhir dengan memanfaatkan n8n,
+Google Sheets, Email, dan Telegram, sehingga proses
+menjadi lebih cepat, transparan, dan terdokumentasi.

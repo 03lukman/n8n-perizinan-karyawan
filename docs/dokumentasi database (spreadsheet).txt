@@ -1,0 +1,216 @@
+STRUKTUR GOOGLE SHEETS & LOGIKA FORM
+SISTEM PERMOHONAN IZIN KARYAWAN
+====================================
+
+Google Sheets digunakan sebagai database utama sistem.
+Namun, tidak semua kolom diisi langsung melalui Form.
+Sebagian kolom diisi otomatis oleh sistem (n8n / Apps Script).
+
+Terdapat dua sheet utama:
+1. Sheet Pengajuan
+2. Sheet Realisasi
+
+----------------------------------------------------
+
+1. SHEET: PENGAJUAN
+-------------------
+Sheet ini menyimpan seluruh data pengajuan izin karyawan
+beserta status persetujuan atasan dan HR.
+
+----------------------------------------------------
+A. KOLOM YANG DIISI MELALUI FORM PENGAJUAN
+----------------------------------------------------
+
+1) Nama
+   - Diisi oleh: Karyawan (Form)
+   - Tipe: String
+   - Keterangan:
+     Nama lengkap karyawan yang mengajukan izin.
+
+2) NIK
+   - Diisi oleh: Karyawan (Form)
+   - Tipe: String
+   - Keterangan:
+     Nomor Induk Karyawan.
+
+3) Email Address
+   - Diisi oleh: Karyawan (Form)
+   - Tipe: String
+   - Keterangan:
+     Email aktif karyawan untuk menerima notifikasi.
+
+4) KATEGORI
+   - Diisi oleh: Karyawan (Form)
+   - Tipe: String
+   - Keterangan:
+     Kategori izin (Pribadi, Sakit, Dinas, dll).
+
+5) Jenis Izin Resmi
+   - Diisi oleh: Karyawan (Form)
+   - Tipe: String
+   - Keterangan:
+     Jenis izin sesuai kebijakan perusahaan.
+
+6) Tanggal Izin
+   - Diisi oleh: Karyawan (Form)
+   - Tipe: Date
+   - Keterangan:
+     Tanggal mulai izin.
+
+7) Sampai
+   - Diisi oleh: Karyawan (Form)
+   - Tipe: Date
+   - Keterangan:
+     Tanggal akhir izin.
+
+8) Jam Mulai
+   - Diisi oleh: Karyawan (Form)
+   - Tipe: Time
+   - Keterangan:
+     Jam mulai izin.
+
+9) Jam Selesai
+   - Diisi oleh: Karyawan (Form)
+   - Tipe: Time
+   - Keterangan:
+     Jam selesai izin.
+
+10) Keterangan
+    - Diisi oleh: Karyawan (Form)
+    - Tipe: String
+    - Keterangan:
+      Alasan atau catatan tambahan terkait izin.
+
+11) Lampiran
+    - Diisi oleh: Karyawan (Form) [Opsional]
+    - Tipe: URL
+    - Keterangan:
+      Link dokumen pendukung (contoh: surat dokter).
+
+----------------------------------------------------
+B. KOLOM YANG DIISI OTOMATIS OLEH SISTEM
+----------------------------------------------------
+
+12) ID Unik
+    - Diisi oleh: Sistem (Apps Script)
+    - Tipe: String
+    - Keterangan:
+      Kode unik untuk setiap pengajuan izin.
+      Digunakan sebagai primary key dan penghubung antar sheet.
+
+13) Timestamp
+    - Diisi oleh: Sistem (Google Form / n8n)
+    - Tipe: DateTime
+    - Keterangan:
+      Waktu pengajuan izin dicatat secara otomatis.
+
+14) Status Atasan
+    - Diisi oleh: Sistem (Apps Script)
+    - Nilai Awal:
+      Pending
+    - Nilai Akhir:
+      Disetujui / Ditolak
+    - Keterangan:
+      Status persetujuan dari atasan.
+
+15) Status HR
+    - Diisi oleh: Sistem (Apps Script)
+    - Nilai Awal:
+      Pending
+    - Nilai Akhir:
+      Disetujui / Ditolak
+    - Keterangan:
+      Status verifikasi akhir oleh HR.
+
+----------------------------------------------------
+
+2. SHEET: REALISASI
+-------------------
+Sheet ini menyimpan laporan realisasi izin setelah izin disetujui.
+
+----------------------------------------------------
+A. KOLOM YANG DIISI MELALUI FORM REALISASI
+----------------------------------------------------
+
+1) ID Unik
+   - Diisi oleh: Karyawan (Form Realisasi)
+   - Tipe: String
+   - Keterangan:
+     ID pengajuan izin yang telah disetujui.
+     Digunakan untuk mencocokkan data dengan Sheet Pengajuan.
+
+2) Catatan Singkat
+   - Diisi oleh: Karyawan (Form Realisasi)
+   - Tipe: String
+   - Keterangan:
+     Catatan tambahan terkait realisasi izin.
+
+3) Bukti
+   - Diisi oleh: Karyawan (Form Realisasi) [Opsional]
+   - Tipe: URL
+   - Keterangan:
+     Link foto atau dokumen bukti realisasi.
+
+----------------------------------------------------
+B. KOLOM YANG DIISI OTOMATIS OLEH SISTEM
+----------------------------------------------------
+
+4) Nama
+   - Diisi oleh: Sistem (n8n)
+   - Tipe: String
+   - Keterangan:
+     Diambil dari Sheet Pengajuan berdasarkan ID Unik.
+
+5) NIK
+   - Diisi oleh: Sistem (n8n)
+   - Tipe: String
+   - Keterangan:
+     Diambil dari Sheet Pengajuan.
+
+6) Timestamp
+   - Diisi oleh: Sistem (n8n)
+   - Tipe: DateTime
+   - Keterangan:
+     Waktu realisasi dicatat otomatis oleh sistem.
+
+----------------------------------------------------
+
+3. LOGIKA VALIDASI DATA
+----------------------
+
+1) ID Unik WAJIB ADA
+   - Workflow akan menghentikan proses jika ID Unik kosong
+   - Digunakan sebagai penghubung antar sheet
+
+2) Realisasi hanya diproses jika:
+   - Status Atasan = Disetujui
+   - Status HR = Disetujui
+
+3) Status hanya bisa diubah melalui:
+   - Tombol persetujuan (Apps Script)
+   - Bukan edit manual spreadsheet
+
+----------------------------------------------------
+
+4. CATATAN PENTING UNTUK PENGGUNA
+--------------------------------
+
+- Jangan menambah atau menghapus kolom tanpa menyesuaikan workflow
+- Jangan mengubah nama kolom
+- Form hanya menampilkan kolom yang diperlukan
+- Kolom status dan sistem tidak ditampilkan di Form
+
+----------------------------------------------------
+
+5. RINGKASAN LOGIKA FORM
+-----------------------
+
+Form Pengajuan:
+- Digunakan oleh: Karyawan
+- Mengisi data identitas & rencana izin
+- Tidak mengisi status dan ID
+
+Form Realisasi:
+- Digunakan oleh: Karyawan
+- Hanya diisi setelah izin disetujui
+- Wajib mengisi ID Unik
