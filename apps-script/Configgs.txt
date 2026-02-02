@@ -1,0 +1,18 @@
+// CONFIGURATION
+const CONFIG = {
+  WEB_APP_URL: 
+  "isi dengan link spreadsheet anda", 
+  SHEET_NAME: "Pengajuan",
+  EMAIL_ATASAN: "isi dengan email atasan anda",
+  EMAIL_HR: "isi dengan email hr anda",
+
+  // Nama-nama kolom di Google Sheet Anda (Harus sama persis)
+  COL_HEADERS: {
+    NAMA: "Nama",
+    EMAIL_USER: "Email Address",
+    ID_UNIK: "ID Unik",
+    STATUS_ATASAN: "Status Atasan", // Tambahkan ini di Sheet
+    STATUS_HR: "Status HR"          // Tambahkan ini di Sheet
+  }
+};
+
