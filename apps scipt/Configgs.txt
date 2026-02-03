@@ -1,0 +1,24 @@
+// CONFIGURATION
+const CONFIG = {
+  // URL Web App setelah di-deploy
+  WEB_APP_URL: "isi dengan link spreadsheet anda", 
+  
+  // NAMA SHEET (Wajib sama persis dengan nama tab di bawah Google Sheets)
+  SHEET_NAME: "Pengajuan",
+  SHEET_REALISASI: "Realisasi", 
+  EMAIL_ATASAN: "atasan@gmail.com",
+  EMAIL_HR: "HR@gmail.com",
+
+  // NAMA HEADER KOLOM (Wajib sama persis dengan Baris 1 di Google Sheets)
+  COL_HEADERS: {
+    NAMA: "Nama",
+    EMAIL_USER: "Email Address",
+    ID_UNIK: "ID Unik",          // Pastikan kolom ini ada di sheet Pengajuan & Realisasi
+    STATUS_ATASAN: "Status Atasan",
+    STATUS_HR: "Status HR",
+    
+    // Sesuaikan nama di bawah ini dengan judul kolom tempat link file berada
+    FILE_PENGAJUAN: "Lampiran",  // Ganti jika di Sheet Pengajuan judul kolomnya berbeda
+    FILE_REALISASI: "Bukti"      // Ganti jika di Sheet Realisasi judul kolomnya berbeda
+  }
+};
