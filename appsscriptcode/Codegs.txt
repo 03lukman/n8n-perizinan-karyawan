@@ -53,88 +53,145 @@ function doGet(e) {
 }
 
 /**
- * Fungsi ini otomatis berjalan saat ada data masuk dari Google Form.
- * Dirancang untuk menangani dua alur berbeda secara terisolasi.
+ * FUNGSI TRIGGER UTAMA (ON FORM SUBMIT)
+ * REVISI: Menggunakan setValues() untuk mencegah trigger ganda di n8n
  */
 function onFormSubmit(e) {
-  // Try-catch digunakan agar jika terjadi error, sistem tidak langsung mati total
   try {
-    // 1. IDENTIFIKASI DATA MASUK
-    const sheet = e.range.getSheet();         // Mengidentifikasi sheet mana yang menerima data
-    const sheetName = sheet.getName();       // Mengambil nama sheet (Pengajuan atau Realisasi)
-    const row = e.range.getRow();            // Mendapatkan nomor baris tempat data baru masuk
-    const responses = e.namedValues;          // Mengambil seluruh jawaban dari Google Form dalam bentuk objek
+    const sheet = e.range.getSheet();
+    const sheetName = sheet.getName();
+    const responses = e.namedValues;
+    const row = e.range.getRow();
 
-    // 2. GERBANG PEMISAH LOGIKA (TIDAK SALING MENGGANGGU)
-    
-    // --- BLOK KHUSUS PENGAJUAN ---
+    // --- LOGIKA 1: FORM UTAMA (TAB PENGAJUAN) ---
     if (sheetName === CONFIG.SHEET_NAME) {
+      const emailUser = responses[CONFIG.COL_HEADERS.EMAIL_USER][0];
+      const karyawan = getKaryawanDetails(emailUser); // Menggunakan helper.gs
       
-      // A. Membuat ID Unik (Contoh: B-05) berdasarkan Bulan dan Nomor Baris
+      if (!karyawan) {
+        Logger.log("Email tidak terdaftar: " + emailUser);
+        return;
+      }
+
+      // Generate ID Unik (Contoh: B-01)
       const now = new Date();
       const monthLetter = "ABCDEFGHIJKL".charAt(now.getMonth());
       const idUnik = monthLetter + "-" + ("00" + (row - 1)).slice(-2);
-      
-      // B. Mencari posisi kolom di Sheet Pengajuan (Agar dinamis)
-      const colID = getColumnIndex(sheet, CONFIG.COL_HEADERS.ID_UNIK);
-      const colAtasan = getColumnIndex(sheet, CONFIG.COL_HEADERS.STATUS_ATASAN);
-      const colHR = getColumnIndex(sheet, CONFIG.COL_HEADERS.STATUS_HR);
-      
-      // C. Mengisi data ke Sheet Pengajuan (Aksi setValue hanya terjadi di sheet ini)
-      if (colID) sheet.getRange(row, colID).setValue(idUnik);
-      if (colAtasan) sheet.getRange(row, colAtasan).setValue("Pending");
-      if (colHR) sheet.getRange(row, colHR).setValue("Pending");
 
-      // D. Menamai Ulang File di Pengajuan (Format: ID_Nama.ext)
+      const col = {
+        id: getColumnIndex(sheet, CONFIG.COL_HEADERS.ID_UNIK),
+        nama: getColumnIndex(sheet, CONFIG.COL_HEADERS.NAMA),
+        nik: getColumnIndex(sheet, CONFIG.COL_HEADERS.NIK),
+        atasanEmail: getColumnIndex(sheet, CONFIG.COL_HEADERS.EMAIL_ATASAN),
+        statusAtasan: getColumnIndex(sheet, CONFIG.COL_HEADERS.STATUS_ATASAN),
+        statusHR: getColumnIndex(sheet, CONFIG.COL_HEADERS.STATUS_HR)
+      };
+
+      // Isi Data Otomatis (Hydration)
+      if (col.id) sheet.getRange(row, col.id).setValue(idUnik);
+      if (col.nama) sheet.getRange(row, col.nama).setValue(karyawan.nama);
+      if (col.nik) sheet.getRange(row, col.nik).setValue(karyawan.nik);
+      if (col.atasanEmail) sheet.getRange(row, col.atasanEmail).setValue(karyawan.atasan);
+      if (col.statusAtasan) sheet.getRange(row, col.statusAtasan).setValue("Pending");
+      if (col.statusHR) sheet.getRange(row, col.statusHR).setValue("Pending");
+
+      // [TETAP] Rename & Pindah File
       const linkFile = responses[CONFIG.COL_HEADERS.FILE_PENGAJUAN] ? responses[CONFIG.COL_HEADERS.FILE_PENGAJUAN][0] : "";
-      const namaUser = responses[CONFIG.COL_HEADERS.NAMA] ? responses[CONFIG.COL_HEADERS.NAMA][0] : "TanpaNama";
-      
       if (linkFile !== "") {
-        executeRename(linkFile, idUnik, namaUser);
+        executeRenameAndMove(linkFile, idUnik, karyawan.nama, "UTAMA");
       }
-      
-      return; // SKRIP BERHENTI DI SINI agar tidak masuk ke logika Realisasi
-    }
-
-    // --- BLOK KHUSUS REALISASI ---
-    if (sheetName === CONFIG.SHEET_REALISASI) {
-      
-      // A. Mengambil ID Unik yang diketik Karyawan di Form Realisasi
-      const idTerdaftar = responses[CONFIG.COL_HEADERS.ID_UNIK] ? responses[CONFIG.COL_HEADERS.ID_UNIK][0] : "REKAP";
-      
-      // B. Mengambil Nama Karyawan
-      const namaUser = responses[CONFIG.COL_HEADERS.NAMA] ? responses[CONFIG.COL_HEADERS.NAMA][0] : "User";
-      
-      // C. Menamai Ulang File Bukti di Realisasi (Format: ID_Nama.ext)
-      const linkFile = responses[CONFIG.COL_HEADERS.FILE_REALISASI] ? responses[CONFIG.COL_HEADERS.FILE_REALISASI][0] : "";
-      
-      if (linkFile !== "") {
-        executeRename(linkFile, idTerdaftar, namaUser);
-      }
-      
-      return; // SKRIP BERHENTI DI SINI
+    } 
+    
+    // --- [TETAP] LOGIKA 2: FORM SUSULAN ---
+    else if (sheetName === CONFIG.SHEET_SUSULAN) {
+      syncSusulanToMain(responses);
     }
 
   } catch (err) {
-    // Mencatat error di Logger Google Apps Script (bisa dicek di tab Executions)
-    Logger.log("Error Terdeteksi: " + err.toString());
+    Logger.log("Error onFormSubmit: " + err.toString());
   }
 }
 
 /**
- * FUNGSI EKSEKUSI RENAME (Terpisah agar rapi)
- * Bertugas mengganti nama file di Google Drive
+ * FUNGSI SINKRONISASI DATA SUSULAN (VERSI UPDATE NAMA)
+ * Mencari ID Unik di Tab Pengajuan, mengambil nama asli, lalu menempelkan link.
  */
-function executeRename(url, id, nama) {
-  // Regex untuk mengambil rangkaian kode ID File dari link Google Drive
-  const fileIdMatch = url.match(/[-\w]{25,}/);
+function syncSusulanToMain(responses) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const mainSheet = ss.getSheetByName(CONFIG.SHEET_NAME);
   
-  if (fileIdMatch) {
-    const file = DriveApp.getFileById(fileIdMatch[0]); // Mengakses file di Drive
-    const ext = file.getName().split('.').pop();      // Mempertahankan ekstensi file asli (.jpg, .png, dsb)
+  const idUnik = responses[CONFIG.COL_HEADERS.ID_UNIK] ? responses[CONFIG.COL_HEADERS.ID_UNIK][0].trim() : null;
+  const linkFile = responses[CONFIG.COL_HEADERS.LINK_SUSULAN] ? responses[CONFIG.COL_HEADERS.LINK_SUSULAN][0] : "";
+
+  if (idUnik && linkFile !== "") {
+    const rowIdx = findRowById(mainSheet, idUnik);
+    if (rowIdx) {
+      // --- LOGIKA BARU: AMBIL NAMA DARI TAB PENGAJUAN ---
+      const colNama = getColumnIndex(mainSheet, CONFIG.COL_HEADERS.NAMA);
+      const namaKaryawan = mainSheet.getRange(rowIdx, colNama).getValue() || "USER"; 
+      // ------------------------------------------------
+      
+      const colSusulan = getColumnIndex(mainSheet, CONFIG.COL_HEADERS.LINK_SUSULAN);
+      if (colSusulan) {
+        // Tempel link ke kolom M di tab Pengajuan
+        mainSheet.getRange(rowIdx, colSusulan).setValue(linkFile);
+        
+        // Rename menggunakan nama asli yang baru saja diambil
+        executeRenameAndMove(linkFile, idUnik, namaKaryawan, "SUSULAN");
+      }
+    } else {
+      Logger.log("Peringatan: ID " + idUnik + " tidak ditemukan!");
+    }
+  }
+}
+
+/**
+ * FUNGSI FINAL RENAME & PINDAH FOLDER (VERSI KATEGORI BULAN)
+ * BERUBAH: Sekarang mengecek/membuat folder bulan (A, B, C...) sebelum memindahkan file.
+ */
+function executeRenameAndMove(linksRaw, id, nama, label) {
+  const TARGET_FOLDER_ID = CONFIG.TARGET_FOLDER_ID; 
+  
+  try {
+    const parentFolder = DriveApp.getFolderById(TARGET_FOLDER_ID);
     
-    // Memberikan nama baru sesuai kebutuhan Audit
-    const fileNameBaru = id + "_" + nama + "." + ext;
-    file.setName(fileNameBaru);
+    // 1. [BARU] Tentukan Huruf Bulan (A=Januari, B=Februari, dst)
+    const monthLetters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+    const currentMonthLetter = monthLetters[new Date().getMonth()];
+    
+    // 2. [BARU] Cari atau Buat Sub-Folder Huruf tersebut
+    let targetFolder;
+    const subFolders = parentFolder.getFoldersByName(currentMonthLetter);
+    
+    if (subFolders.hasNext()) {
+      targetFolder = subFolders.next(); // Jika folder sudah ada (misal folder "B"), gunakan itu
+    } else {
+      targetFolder = parentFolder.createFolder(currentMonthLetter); // Jika belum ada, buat baru
+    }
+
+    const links = linksRaw.split(", ");
+    
+    links.forEach((url, index) => {
+      const fileIdMatch = url.trim().match(/[-\w]{25,}/);
+      if (fileIdMatch) {
+        try {
+          const file = DriveApp.getFileById(fileIdMatch[0]);
+          const ext = file.getName().split('.').pop();
+          
+          const penomoran = links.length > 1 ? "_" + (index + 1) : ""; 
+          const namaBaru = id + "_" + nama + "_" + label + penomoran + "." + ext;
+          
+          file.setName(namaBaru);
+          
+          // 3. [BERUBAH] Pindahkan ke targetFolder (Sub-folder bulan)
+          file.moveTo(targetFolder); 
+
+        } catch (e) {
+          Logger.log("Gagal memproses file: " + e.toString());
+        }
+      }
+    });
+  } catch (err) {
+    Logger.log("Error Folder: " + err.toString());
   }
 }
