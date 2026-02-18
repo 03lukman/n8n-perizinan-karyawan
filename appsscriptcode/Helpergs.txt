@@ -2,12 +2,20 @@
  * Mencari nomor baris berdasarkan ID Unik
  */
 function findRowById(sheet, id) {
+  // Proteksi: Jika sheet tidak ada, jangan lanjut
+  if (!sheet) {
+    Logger.log("Error: Sheet tidak ditemukan");
+    return null;
+  }
+  
   const colID = getColumnIndex(sheet, CONFIG.COL_HEADERS.ID_UNIK);
   if (!colID) return null;
   
-  const data = sheet.getRange(1, colID, sheet.getLastRow(), 1).getValues();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return null; // Jika sheet kosong
+
+  const data = sheet.getRange(1, colID, lastRow, 1).getValues();
   for (let i = 0; i < data.length; i++) {
-    // Menggunakan == untuk toleransi perbandingan tipe data string/number
     if (data[i][0] == id) {
       return i + 1;
     }
@@ -16,13 +24,46 @@ function findRowById(sheet, id) {
 }
 
 /**
- * Mencari nomor urut kolom berdasarkan nama Header di baris pertama
+ * Mencari nomor urut kolom berdasarkan nama Header
  */
 function getColumnIndex(sheet, headerName) {
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  // Proteksi: Jika sheet tidak ada, jangan lanjut
+  if (!sheet) return null;
+
+  const lastCol = sheet.getLastColumn();
+  if (lastCol === 0) return null;
+
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
   for (let i = 0; i < headers.length; i++) {
     if (headers[i].toString().trim() === headerName) {
       return i + 1;
+    }
+  }
+  return null;
+}
+
+/**
+ * Mengambil detail karyawan dari tab Data_Karyawan
+ */
+function getKaryawanDetails(email) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const masterSheet = ss.getSheetByName(CONFIG.SHEET_MASTER);
+  
+  // Jika masterSheet null, berikan log peringatan
+  if (!masterSheet) {
+    Logger.log("KRITIS: Tab dengan nama '" + CONFIG.SHEET_MASTER + "' tidak ditemukan!");
+    return null;
+  }
+
+  const data = masterSheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    // Gunakan trim() untuk membuang spasi tak sengaja di email
+    if (data[i][0].toString().toLowerCase().trim() === email.toLowerCase().trim()) {
+      return {
+        nik: data[i][1],
+        nama: data[i][2],
+        atasan: data[i][3]
+      };
     }
   }
   return null;
