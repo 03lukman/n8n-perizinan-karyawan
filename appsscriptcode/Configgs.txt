@@ -1,24 +1,23 @@
-// CONFIGURATION
 const CONFIG = {
-  // URL Web App setelah di-deploy
-  WEB_APP_URL: "isi dengan link spreadsheet anda", 
+  WEB_APP_URL: "https://script.google.com/macros/s/AKfycbwrjKUnJRnKO3xg8kVxkHQlcZ8lD0L9uaRv_oieQJsBUel6HFXLkElzrcTPUZpZyZGKCA/exec", 
   
-  // NAMA SHEET (Wajib sama persis dengan nama tab di bawah Google Sheets)
   SHEET_NAME: "Pengajuan",
-  SHEET_REALISASI: "Realisasi", 
-  EMAIL_ATASAN: "atasan@gmail.com",
-  EMAIL_HR: "HR@gmail.com",
+  SHEET_MASTER: "Data_Karyawan",
+  SHEET_SUSULAN: "Lampiran_Susulan", // [BARU] Nama tab untuk form susulan
 
-  // NAMA HEADER KOLOM (Wajib sama persis dengan Baris 1 di Google Sheets)
+  // ID Folder Pusat tempat semua file (Utama & Susulan) akan digabungkan
+  // Masukkan ID folder "Arsip Lampiran Perizinan" Anda di sini
+  TARGET_FOLDER_ID: "1iATWsGcDz7Nsqd_dq6LdLI6Tb__D_yL2", 
+
   COL_HEADERS: {
-    NAMA: "Nama",
+    ID_UNIK: "ID Unik",
     EMAIL_USER: "Email Address",
-    ID_UNIK: "ID Unik",          // Pastikan kolom ini ada di sheet Pengajuan & Realisasi
+    NAMA: "Nama",
+    NIK: "NIK",
+    EMAIL_ATASAN: "Email Atasan",
     STATUS_ATASAN: "Status Atasan",
     STATUS_HR: "Status HR",
-    
-    // Sesuaikan nama di bawah ini dengan judul kolom tempat link file berada
-    FILE_PENGAJUAN: "Lampiran",  // Ganti jika di Sheet Pengajuan judul kolomnya berbeda
-    FILE_REALISASI: "Bukti"      // Ganti jika di Sheet Realisasi judul kolomnya berbeda
+    FILE_PENGAJUAN: "Lampiran", // Sesuai kolom L di tab Pengajuan
+    LINK_SUSULAN: "Lampiran Susulan" // Sesuai kolom M di tab Pengajuan
   }
 };
