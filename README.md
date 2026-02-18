@@ -45,5 +45,19 @@ sedangkan n8n berperan sebagai pengatur logika dan automasi.
 
 ---
 
+Form Pengajuan:
+Tanggal Izin, Sampai, Jam Mulai, Jam Selesai, Jenis Izin, Durasi, Keterangan, Lampiran
+
+Database: Pengajuan
+Timestamp	ID Unik	Email Address	NIK	Nama	Tanggal Izin	Sampai	Jam Mulai	Jam Selesai	Jenis Izin	Durasi	Keterangan	Lampiran	Lampiran Susulan	Email Atasan	Status Atasan	Status HR
+
+Form Susulan:
+ID Unik, Lampiran Susulan
+
+Database: Lampiran_Susulan
+Timestamp	ID Unik	Email Address	Lampiran Susulan
+
+Database: Data_Karyawan
+Email Address	NIK	Nama 	Email Atasan
 
 
