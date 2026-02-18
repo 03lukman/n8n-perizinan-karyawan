@@ -1,0 +1,1502 @@
+{
+  "name": "Sistem Permohonan Izin Karyawan",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit?resourcekey=&gid=708921683#gid=708921683",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 708921683,
+          "mode": "list",
+          "cachedResultName": "Pengajuan",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit#gid=708921683"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ID Unik",
+              "lookupValue": "={{ $json['ID Unik'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -864,
+        784
+      ],
+      "id": "fb615a09-4406-4f9e-853f-229ba2524cc8",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "luHaPjby5Or3Mg7l",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Konversi serial number Google Sheets / Excel ke Date object\nfunction excelToDate(value) {\n  if (value === null || value === undefined || value === '' || isNaN(value)) {\n    return null;\n  }\n  return new Date(Math.round((value - 25569) * 86400 * 1000));\n}\n\n// Format tanggal: DD/MM/YYYY\nfunction formatDate(date) {\n  return date.toLocaleDateString('id-ID');\n}\n\n// Format jam: HH:mm\nfunction formatTime(date) {\n  return date.toLocaleTimeString('id-ID', {\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false,\n  });\n}\n\n// Format timestamp: DD/MM/YYYY HH:mm:ss\nfunction formatTimestamp(date) {\n  return date.toLocaleString('id-ID', {\n    hour12: false,\n  });\n}\n\nreturn items.map(item => {\n  // === TANGGAL IZIN ===\n  const tglIzin = excelToDate(item.json[\"Tanggal Izin\"]);\n  if (tglIzin) {\n    item.json[\"Tanggal Izin\"] = formatDate(tglIzin);\n  }\n\n  // === SAMPAI ===\n  const sampai = excelToDate(item.json[\"Sampai\"]);\n  if (sampai) {\n    item.json[\"Sampai\"] = formatDate(sampai);\n  }\n\n  // === TIMESTAMP (tanggal + jam) ===\n  const timestamp = excelToDate(item.json[\"Timestamp\"]);\n  if (timestamp) {\n    item.json[\"Timestamp\"] = formatTimestamp(timestamp);\n  }\n\n  // === JAM MULAI ===\n  const jamMulai = excelToDate(item.json[\"Jam Mulai\"]);\n  if (jamMulai) {\n    item.json[\"Jam Mulai\"] = formatTime(jamMulai);\n  }\n\n  // === JAM SELESAI ===\n  const jamSelesai = excelToDate(item.json[\"Jam Selesai\"]);\n  if (jamSelesai) {\n    item.json[\"Jam Selesai\"] = formatTime(jamSelesai);\n  }\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        368
+      ],
+      "id": "37154bae-395a-479b-bb16-7117166dc80e",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1d318ffd-2eb5-441c-b482-0a36aa90f3ad",
+              "leftValue": "={{ $json['Email Atasan'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -384,
+        368
+      ],
+      "id": "220e657e-1838-42d0-965d-45cf780a8fb3",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6b93ffd6-4f43-41cc-90f4-415d696e302a",
+              "leftValue": "={{ $json['Status Atasan'] }}",
+              "rightValue": "Disetujui",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "6433480e-961d-43e0-b321-fd67f869348a",
+              "leftValue": "={{ $json['Status HR'] }}",
+              "rightValue": "Pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        528
+      ],
+      "id": "d948e91f-d45e-40e2-9007-d3530442c97f",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d76faa62-6b5c-48b1-bf03-7ba26b01dc31",
+              "leftValue": "={{ $json['Status Atasan'] }}",
+              "rightValue": "Ditolak",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        720
+      ],
+      "id": "17a22ed5-96e4-494a-8a88-eac373597101",
+      "name": "If8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cbf3b4ee-6774-482b-8784-78a55b6d619a",
+              "leftValue": "={{ $json['Status HR'] }}",
+              "rightValue": "Disetujui",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        880
+      ],
+      "id": "e27cfad2-a2bc-4a5f-ab8b-ec13165f4ecd",
+      "name": "If9"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "10a95b0b-0dbb-4297-a9b8-a9846f149b47",
+              "leftValue": "={{ $json['Status HR'] }}",
+              "rightValue": "Ditolak",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        1056
+      ],
+      "id": "5d3d6594-0946-45ad-967b-46fc34284c13",
+      "name": "If10"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b272e21a-c041-4003-912b-8208d70b6637",
+              "leftValue": "={{ $json['Lampiran Susulan'] }}",
+              "rightValue": "Pending",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -192,
+        1232
+      ],
+      "id": "6c2bca01-9302-48cd-a69e-d8f0498d7451",
+      "name": "If12"
+    },
+    {
+      "parameters": {
+        "fromEmail": "dana@in.agson.co.id",
+        "toEmail": "={{ $json['Email Address'] }}",
+        "subject": "=Pengajuan izin anda pada {{ $json.Timestamp }}",
+        "html": "=<div style=\"\n  font-family: Arial, Helvetica, sans-serif;\n  max-width: 600px;\n  margin: 0 auto;\n  color: #333;\n  line-height: 1.6;\n\">\n\n  <p>\n    Halo <strong>{{ $json.Nama }}</strong>,\n  </p>\n\n  <p>\n    Pengajuan izin anda telah berhasil diproses dan saat ini\n    sedang menunggu persetujuan dari atasan dan HR.\n  </p>\n\n  <p>\n    Kami akan segera menginformasikan kepada Anda apabila terdapat\n    pembaruan status lebih lanjut.\n  </p>\n\n  <p>\n    Terima kasih atas perhatian dan kerja samanya.\n  </p>\n\n  <p style=\"margin-top: 30px;\">\n    Hormat kami,<br>\n    <strong>Tim HR</strong>\n  </p>\n\n</div>S\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        192
+      ],
+      "id": "ef9f7eca-3674-45aa-925d-1d1192caa0c6",
+      "name": "Send an Email",
+      "webhookId": "bb96f0db-a5e3-4d19-82b5-21ab98826ecb",
+      "credentials": {
+        "smtp": {
+          "id": "fLQVZ37sRTwx0tk5",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit?resourcekey=&gid=708921683#gid=708921683",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 708921683,
+          "mode": "list",
+          "cachedResultName": "Pengajuan",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit#gid=708921683"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Notif Atasan": "SENT",
+            "ID Unik": "={{ [\"ID Unik\"] }}"
+          },
+          "matchingColumns": [
+            "ID Unik"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID Unik",
+              "displayName": "ID Unik",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NIK",
+              "displayName": "NIK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nama",
+              "displayName": "Nama",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tanggal Izin",
+              "displayName": "Tanggal Izin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sampai",
+              "displayName": "Sampai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jam Mulai",
+              "displayName": "Jam Mulai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jam Selesai",
+              "displayName": "Jam Selesai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jenis Izin",
+              "displayName": "Jenis Izin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Durasi",
+              "displayName": "Durasi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Keterangan",
+              "displayName": "Keterangan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lampiran",
+              "displayName": "Lampiran",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lampiran Susulan",
+              "displayName": "Lampiran Susulan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Atasan",
+              "displayName": "Email Atasan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status Atasan",
+              "displayName": "Status Atasan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status HR",
+              "displayName": "Status HR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notif Atasan",
+              "displayName": "Notif Atasan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notif Keputusan",
+              "displayName": "Notif Keputusan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notif Susulan",
+              "displayName": "Notif Susulan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -560,
+        624
+      ],
+      "id": "5f3c2ad3-7d15-48f8-bd48-77ff80916272",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "luHaPjby5Or3Mg7l",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Konversi serial number Google Sheets / Excel ke Date object\nfunction excelToDate(value) {\n  if (value === null || value === undefined || value === '' || isNaN(value)) {\n    return null;\n  }\n  return new Date(Math.round((value - 25569) * 86400 * 1000));\n}\n\n// Format tanggal: DD/MM/YYYY\nfunction formatDate(date) {\n  return date.toLocaleDateString('id-ID');\n}\n\n// Format jam: HH:mm\nfunction formatTime(date) {\n  return date.toLocaleTimeString('id-ID', {\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false,\n  });\n}\n\n// Format timestamp: DD/MM/YYYY HH:mm:ss\nfunction formatTimestamp(date) {\n  return date.toLocaleString('id-ID', {\n    hour12: false,\n  });\n}\n\nreturn items.map(item => {\n  // === TANGGAL IZIN ===\n  const tglIzin = excelToDate(item.json[\"Tanggal Izin\"]);\n  if (tglIzin) {\n    item.json[\"Tanggal Izin\"] = formatDate(tglIzin);\n  }\n\n  // === SAMPAI ===\n  const sampai = excelToDate(item.json[\"Sampai\"]);\n  if (sampai) {\n    item.json[\"Sampai\"] = formatDate(sampai);\n  }\n\n  // === TIMESTAMP (tanggal + jam) ===\n  const timestamp = excelToDate(item.json[\"Timestamp\"]);\n  if (timestamp) {\n    item.json[\"Timestamp\"] = formatTimestamp(timestamp);\n  }\n\n  // === JAM MULAI ===\n  const jamMulai = excelToDate(item.json[\"Jam Mulai\"]);\n  if (jamMulai) {\n    item.json[\"Jam Mulai\"] = formatTime(jamMulai);\n  }\n\n  // === JAM SELESAI ===\n  const jamSelesai = excelToDate(item.json[\"Jam Selesai\"]);\n  if (jamSelesai) {\n    item.json[\"Jam Selesai\"] = formatTime(jamSelesai);\n  }\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        624
+      ],
+      "id": "ffd5d74d-7387-45ea-9aeb-efed036a844b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "fromEmail": "dana@in.agson.co.id",
+        "toEmail": "={{ $json['Email Atasan'] }}",
+        "subject": "=Pengajuan Baru dari {{ $json.Nama }} pada {{ $json.Timestamp }}",
+        "html": "=<div style=\"\n  font-family: 'Segoe UI', Arial, sans-serif;\n  max-width: 560px;\n  margin: 0 auto;\n  background-color: #ffffff;\n  color: #333;\n  line-height: 1.6;\n\">\n\n  <p>\n    Yth. Bapak/Ibu Atasan,\n  </p>\n\n  <p>\n    Berikut adalah pengajuan rencana izin karyawan untuk mendapatkan persetujuan:\n  </p>\n\n  <!-- DATA TABLE -->\n  <div style=\"\n    border: 1px solid #e0e0e0;\n    border-radius: 8px;\n    padding: 16px;\n    background-color: #fafafa;\n  \">\n    <table style=\"width: 100%; border-collapse: collapse; font-size: 14px;\">\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777; width: 35%;\">\n          Pemohon Izin\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Nama\"] }} ({{ $json[\"NIK\"] }})\n        </td>\n      </tr>\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777;\">\n          Jenis Izin\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Jenis Izin\"] }}\n        </td>\n      </tr>\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777;\">\n          Durasi\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Durasi\"] }}\n        </td>\n      </tr>\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777;\">\n          Tanggal Izin\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Tanggal Izin\"] }} – {{ $json[\"Sampai\"] }}\n        </td>\n      </tr>\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777;\">\n          Waktu\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Jam Mulai\"] }} – {{ $json[\"Jam Selesai\"] }}\n        </td>\n      </tr>\n\n      <!-- KETERANGAN -->\n      <tr style=\"border-top: 1px solid #e0e0e0;\">\n        <td style=\"padding: 12px 0 6px; color: #777; vertical-align: top;\">\n          Keterangan\n        </td>\n        <td style=\"padding: 12px 0 6px; color: #555;\">\n          {{ $json[\"Keterangan\"] || \"Tidak ada keterangan tambahan\" }}\n        </td>\n      </tr>\n\n      <!-- LAMPIRAN -->\n      <tr>\n        <td style=\"padding: 6px 0; color: #777; vertical-align: top;\">\n          Lampiran\n        </td>\n        <td style=\"padding: 6px 0;\">\n          {{ $json[\"Lampiran\"] \n            ? '<a href=\"' + $json[\"Lampiran\"] + '\" target=\"_blank\" style=\"color:#1a73e8; text-decoration:none;\">Lihat Lampiran</a>' \n            : '<span style=\"color:#999;\">Tidak ada</span>' \n          }}\n        </td>\n      </tr>\n\n    </table>\n  </div>\n\n  <!-- ACTION -->\n  <div style=\"\n    margin-top: 28px;\n    padding-top: 20px;\n    border-top: 1px solid #e0e0e0;\n    text-align: center;\n  \">\n    <p style=\"margin-bottom: 16px;\">\n       Mohon kesediaan Bapak/Ibu untuk memberikan keputusan atas pengajuan ini.\n    </p>\n\n\n      <a href=\"https://script.google.com/macros/s/AKfycbwrjKUnJRnKO3xg8kVxkHQlcZ8lD0L9uaRv_oieQJsBUel6HFXLkElzrcTPUZpZyZGKCA/exec?id={{ $json['ID Unik'] }}&action=setuju&role=atasan\"\n         style=\"\n           background-color: #2e7d32;\n           color: #ffffff;\n           padding: 12px 32px;\n           text-decoration: none;\n           border-radius: 24px;\n           font-weight: 600;\n           display: inline-block;\n           margin-right: 12px;\n         \">\n        SETUJUI\n      </a>\n\n      <a href=\"https://script.google.com/macros/s/AKfycbwrjKUnJRnKO3xg8kVxkHQlcZ8lD0L9uaRv_oieQJsBUel6HFXLkElzrcTPUZpZyZGKCA/exec?id={{ $json['ID Unik'] }}&action=tolak&role=atasan\"\n         style=\"\n           background-color: #c62828;\n           color: #ffffff;\n           padding: 12px 32px;\n           text-decoration: none;\n           border-radius: 24px;\n           font-weight: 600;\n           display: inline-block;\n         \">\n        TOLAK\n      </a>\n    </div>\n\n    <p style=\"\n      font-size: 11px;\n      color: #999;\n      margin-top: 28px;\n      text-align: center;\n    \">\n      ID Form Pengajuan: {{ $json[\"ID Unik\"] }}\n    </p>\n\n <p style=\"\n      font-size: 11px;\n      color: #999;\n      margin-top: 28px;\n      text-align: center;\n    \">\n      <i>Sistem akan mengirimkan email notifikasi otomatis ke HR ketika tombol setuju diklik.</i>\n    </p>\n\n  </div>\n</div>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        352
+      ],
+      "id": "a600bf00-394b-4281-8c2f-95da0fd57b3e",
+      "name": "Send an Email2",
+      "webhookId": "d42ae221-9f8a-4f97-8d6b-2f2b5a5e6ac0",
+      "credentials": {
+        "smtp": {
+          "id": "fLQVZ37sRTwx0tk5",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit?resourcekey=&gid=708921683#gid=708921683",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 708921683,
+          "mode": "list",
+          "cachedResultName": "Pengajuan",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit#gid=708921683"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        784
+      ],
+      "id": "4910ffbe-392a-47d4-ad8c-5fb9a9bb72b2",
+      "name": "Email Atasan",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "Kl3uhf0sUfZs4jZI",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "dana@in.agson.co.id",
+        "toEmail": "change3130@gmail.com",
+        "subject": "=Verifikasi Izin {{ $json.Nama }} ({{ $json['ID Unik'] }})",
+        "html": "=<div style=\"\n  font-family: 'Segoe UI', Arial, sans-serif;\n  max-width: 560px;\n  margin: 0 auto;\n  background-color: #ffffff;\n  color: #333;\n  line-height: 1.6;\n\">\n\n  <p>\n    Yth. Bapak/Ibu <b>HR Department</b>,\n  </p>\n\n  <p>\n    Berikut adalah pengajuan rencana izin karyawan yang telah melewati tahap persetujuan oleh atasan dan memerlukan verifikasi akhir dari HR:\n  </p>\n\n  <div style=\"\n    border: 1px solid #e0e0e0;\n    border-radius: 8px;\n    padding: 16px;\n    background-color: #fafafa;\n  \">\n    <table style=\"width: 100%; border-collapse: collapse; font-size: 14px;\">\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777; width: 35%;\">\n          Pemohon Izin\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Nama\"] }} ({{ $json[\"NIK\"] }})\n        </td>\n      </tr>\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777;\">\n          Jenis Izin\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Jenis Izin\"] }}\n        </td>\n      </tr>\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777;\">\n          Durasi\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Durasi\"] }}\n        </td>\n      </tr>\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777;\">\n          Tanggal Izin\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Tanggal Izin\"] }} – {{ $json[\"Sampai\"] }}\n        </td>\n      </tr>\n\n      <tr>\n        <td style=\"padding: 8px 0; color: #777;\">\n          Waktu\n        </td>\n        <td style=\"padding: 8px 0; font-weight: 600;\">\n          {{ $json[\"Jam Mulai\"] }} – {{ $json[\"Jam Selesai\"] }}\n        </td>\n      </tr>\n\n      <tr style=\"border-top: 1px solid #e0e0e0;\">\n        <td style=\"padding: 12px 0 6px; color: #777; vertical-align: top;\">\n          Keterangan\n        </td>\n        <td style=\"padding: 12px 0 6px; color: #555;\">\n          {{ $json[\"Keterangan\"] || \"Tidak ada keterangan tambahan\" }}\n        </td>\n      </tr>\n\n      <tr>\n        <td style=\"padding: 6px 0; color: #777; vertical-align: top;\">\n          Lampiran\n        </td>\n        <td style=\"padding: 6px 0;\">\n          {{ $json[\"Lampiran\"] \n            ? '<a href=\"' + $json[\"Lampiran\"] + '\" target=\"_blank\" style=\"color:#1a73e8; text-decoration:none;\">Lihat Lampiran</a>' \n            : '<span style=\"color:#999;\">Tidak ada</span>' \n          }}\n        </td>\n      </tr>\n\n    </table>\n  </div>\n\n  <div style=\"\n    margin-top: 28px;\n    padding-top: 20px;\n    border-top: 1px solid #e0e0e0;\n    text-align: center;\n  \">\n    <p style=\"margin-bottom: 16px; font-weight: bold;\">\n        Keputusan HR (Verifikasi Akhir):\n    </p>\n\n      <a href=\"https://script.google.com/macros/s/AKfycbwrjKUnJRnKO3xg8kVxkHQlcZ8lD0L9uaRv_oieQJsBUel6HFXLkElzrcTPUZpZyZGKCA/exec?id={{ $json['ID Unik'] }}&action=setuju&role=hr\"\n         style=\"\n           background-color: #1976d2;\n           color: #ffffff;\n           padding: 12px 32px;\n           text-decoration: none;\n           border-radius: 24px;\n           font-weight: 600;\n           display: inline-block;\n           margin-right: 12px;\n         \">\n         VERIFIKASI\n      </a>\n\n      <a href=\"https://script.google.com/macros/s/AKfycbwrjKUnJRnKO3xg8kVxkHQlcZ8lD0L9uaRv_oieQJsBUel6HFXLkElzrcTPUZpZyZGKCA/exec?id={{ $json['ID Unik'] }}&action=tolak&role=hr\"\n         style=\"\n           background-color: #c62828;\n           color: #ffffff;\n           padding: 12px 32px;\n           text-decoration: none;\n           border-radius: 24px;\n           font-weight: 600;\n           display: inline-block;\n         \">\n        TOLAK\n      </a>\n    </div>\n\n    <p style=\"\n      font-size: 11px;\n      color: #999;\n      margin-top: 28px;\n      text-align: center;\n    \">\n      ID Form Pengajuan: {{ $json[\"ID Unik\"] }} <br>\n\n <p style=\"\n      font-size: 11px;\n      color: #999;\n      margin-top: 28px;\n      text-align: center;\n    \">\n      <i>Sistem akan mengirimkan email notifikasi otomatis ke karyawan setelah tombol diklik.</i>\n    </p>\n\n  </div>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        512
+      ],
+      "id": "041ee5ee-01ae-4dcf-9b1c-b813bc3b7933",
+      "name": "Send an Email1",
+      "webhookId": "08c3c7e0-5e5d-46c4-94a0-33fba2cf3d3f",
+      "credentials": {
+        "smtp": {
+          "id": "fLQVZ37sRTwx0tk5",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "dana@in.agson.co.id",
+        "toEmail": "={{ $json[\"Email Address\"] }}",
+        "subject": "=Keputusan Izin anda pada {{ $json[\"Timestamp\"] }}",
+        "html": "=<div style=\"\n  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n  max-width: 600px;\n  margin: 0 auto;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  overflow: hidden;\n  background-color: #ffffff;\n\">\n\n  <!-- Header -->\n  <div style=\"\n    background-color: #f8f9fa;\n    padding: 20px;\n    text-align: center;\n    border-bottom: 1px solid #e0e0e0;\n  \">\n    <h2 style=\"margin: 0; color: #333;\">\n      Update Status Pengajuan Izin\n    </h2>\n  </div>\n\n  <!-- Content -->\n  <div style=\"padding: 30px; line-height: 1.6; color: #444;\">\n\n    <p>\n      Halo <strong>{{ $json.Nama }}</strong>,\n    </p>\n\n    <p>\n      Terima kasih telah menunggu. Kami ingin menginformasikan bahwa\n      pengajuan Anda yang dikirim pada\n      <strong>{{ $json.Timestamp }}</strong>\n      telah selesai ditinjau oleh <strong>Atasan dan HR</strong>.\n    </p>\n\n    <!-- Divider -->\n    <div style=\"border-top: 1px solid #e0e0e0; margin: 25px 0;\"></div>\n\n    <!-- Status -->\n    <div style=\"\n      padding: 16px;\n      text-align: center;\n      border-radius: 6px;\n      background-color: {{ $json[\"Status Atasan\"] == \"Ditolak\" ? \"#f8d7da\" : \"#d4edda\" }};\ncolor: {{ $json[\"Status Atasan\"] == \"Ditolak\" ? \"#721c24\" : \"#155724\" }};\n\n      font-size: 20px;\n      font-weight: bold;\n      border: 1px solid #e0e0e0;\n    \">\n      {{ $json[\"Status Atasan\"] }}\n    </div>\n\n    <!-- Divider -->\n    <div style=\"border-top: 1px solid #e0e0e0; margin: 25px 0;\"></div>\n\n    <!-- Detail -->\n    <table style=\"width: 100%; border-collapse: collapse;\">\n      <tr>\n        <td style=\"padding: 10px 0; color: #888; border-bottom: 1px solid #eee;\">\n          ID Form Pengajuan Izin\n        </td>\n        <td style=\"padding: 10px 0; text-align: right; font-weight: bold; border-bottom: 1px solid #eee;\">\n          {{ $json[\"ID Unik\"] }}\n        </td>\n      </tr>\n    </table>\n\n    <p style=\"margin-top: 20px; font-size: 14px; color: #666;\">\n      Silakan gunakan <strong>ID Form Pengajuan Izin</strong> di atas\n      untuk mengisi ID pada <strong>Form Realisasi</strong>.\n    </p>\n  </div>\n\n  <!-- Footer -->\n  <div style=\"\n    background-color: #f8f9fa;\n    padding: 15px;\n    text-align: center;\n    font-size: 12px;\n    color: #999;\n    border-top: 1px solid #e0e0e0;\n  \">\n    Jika Anda memiliki pertanyaan lebih lanjut,\n    silakan hubungi Atasan.\n  </div>\n\n</div>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        704
+      ],
+      "id": "17dc7571-64e5-4b65-b678-782fa088b24d",
+      "name": "Send an Email3",
+      "webhookId": "0bfff4b5-ddbd-49b8-9da0-fc676d6fe51c",
+      "credentials": {
+        "smtp": {
+          "id": "fLQVZ37sRTwx0tk5",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit?resourcekey=&gid=708921683#gid=708921683",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 708921683,
+          "mode": "list",
+          "cachedResultName": "Pengajuan",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit#gid=708921683"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "ID Unik": "={{ $json['ID Unik'] }}"
+          },
+          "matchingColumns": [
+            "ID Unik"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID Unik",
+              "displayName": "ID Unik",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NIK",
+              "displayName": "NIK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nama",
+              "displayName": "Nama",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tanggal Izin",
+              "displayName": "Tanggal Izin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sampai",
+              "displayName": "Sampai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jam Mulai",
+              "displayName": "Jam Mulai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jam Selesai",
+              "displayName": "Jam Selesai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jenis Izin",
+              "displayName": "Jenis Izin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Durasi",
+              "displayName": "Durasi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Keterangan",
+              "displayName": "Keterangan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lampiran",
+              "displayName": "Lampiran",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lampiran Susulan",
+              "displayName": "Lampiran Susulan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Atasan",
+              "displayName": "Email Atasan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status Atasan",
+              "displayName": "Status Atasan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status HR",
+              "displayName": "Status HR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notif Atasan",
+              "displayName": "Notif Atasan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notif Keputusan",
+              "displayName": "Notif Keputusan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notif Susulan",
+              "displayName": "Notif Susulan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -544,
+        976
+      ],
+      "id": "2ba3836c-f9eb-43e1-b47c-3d53516bf8f2",
+      "name": "Update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "luHaPjby5Or3Mg7l",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "dana@in.agson.co.id",
+        "toEmail": "={{ $json[\"Email Address\"] }}",
+        "subject": "=Pengajuan Baru dari {{ $json.Nama }} pada {{ $json.Timestamp }}",
+        "html": "=<div style=\"\n  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n  max-width: 600px;\n  margin: 0 auto;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  overflow: hidden;\n  background-color: #ffffff;\n\">\n\n  <div style=\"\n    background-color: #f8f9fa;\n    padding: 20px;\n    text-align: center;\n    border-bottom: 1px solid #e0e0e0;\n  \">\n    <h2 style=\"margin: 0; color: #333;\">\n      Update Status Pengajuan Izin\n    </h2>\n  </div>\n\n  <div style=\"padding: 30px; line-height: 1.6; color: #444;\">\n\n    <p>\n      Halo <strong>{{ $json.Nama }}</strong>,\n    </p>\n\n    <p>\n      Terima kasih telah menunggu. Kami ingin menginformasikan bahwa\n      pengajuan Anda yang dikirim pada\n      <strong>{{ $json.Timestamp }}</strong>\n      telah selesai ditinjau oleh <strong>Atasan dan HR</strong> dengan hasil sebagai berikut:\n    </p>\n\n    <div style=\"border-top: 1px solid #e0e0e0; margin: 25px 0;\"></div>\n\n    <div style=\"\n      padding: 16px;\n      text-align: center;\n      border-radius: 6px;\n      background-color: #d4edda;\n      color: #155724;\n      font-size: 20px;\n      font-weight: bold;\n      border: 1px solid #c3e6cb;\n    \">\n      DISETUJUI\n    </div>\n\n    <div style=\"border-top: 1px solid #e0e0e0; margin: 25px 0;\"></div>\n\n    <table style=\"width: 100%; border-collapse: collapse;\">\n      <tr>\n        <td style=\"padding: 10px 0; color: #888; border-bottom: 1px solid #eee;\">\n          ID Form Pengajuan Izin\n        </td>\n        <td style=\"padding: 10px 0; text-align: right; font-weight: bold; border-bottom: 1px solid #eee;\">\n          {{ $json[\"ID Unik\"] }}\n        </td>\n      </tr>\n    </table>\n\n    <div style=\"margin-top: 30px; text-align: center;\">\n      <p style=\"font-size: 14px; margin-bottom: 15px; color: #666;\">\n        Silakan klik tombol di bawah untuk mengisi lampiran susulan:\n      </p>\n      <a href=\"https://docs.google.com/forms/d/e/1FAIpQLSfKXw0jjw6ulhq3-JRjyz_zLSKOJKweiR2bneJg790M9uIpIw/viewform?usp=pp_url&entry.1750430766={{ $json['ID Unik'] }}\" \n         style=\"\n           display: inline-block;\n           padding: 14px 28px;\n           background-color: #007bff;\n           color: #ffffff;\n           text-decoration: none;\n           border-radius: 5px;\n           font-weight: bold;\n           font-size: 16px;\n         \">\n        Form Susulan\n      </a>\n      <p style=\"margin-top: 15px; font-size: 12px; color: #999;\">\n        ID Form: <strong>{{ $json['ID Unik'] }}</strong> (Otomatis terisi)\n      </p>\n    </div>\n\n  </div> \n\n  <div style=\"\n    background-color: #f8f9fa;\n    padding: 15px;\n    text-align: center;\n    font-size: 12px;\n    color: #999;\n    border-top: 1px solid #e0e0e0;\n  \">\n    Jika Anda memiliki pertanyaan lebih lanjut, silakan hubungi bagian HR.\n  </div>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        864
+      ],
+      "id": "ff2292dc-d2de-417d-a55b-41447fcfb6bd",
+      "name": "Send an Email4",
+      "webhookId": "6076f1ae-c2fe-459d-904c-fb532f80ceee",
+      "credentials": {
+        "smtp": {
+          "id": "fLQVZ37sRTwx0tk5",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "dana@in.agson.co.id",
+        "toEmail": "={{ $json[\"Email Address\"] }}",
+        "subject": "=Pengajuan izin anda pada {{ $json.Timestamp }}",
+        "html": "=<div style=\"\n  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n  max-width: 600px;\n  margin: 0 auto;\n  border: 1px solid #e0e0e0;\n  border-radius: 8px;\n  overflow: hidden;\n  background-color: #ffffff;\n\">\n\n  <!-- Header -->\n  <div style=\"\n    background-color: #f8f9fa;\n    padding: 20px;\n    text-align: center;\n    border-bottom: 1px solid #e0e0e0;\n  \">\n    <h2 style=\"margin: 0; color: #333;\">\n      Update Status Pengajuan Izin\n    </h2>\n  </div>\n\n  <!-- Content -->\n  <div style=\"padding: 30px; line-height: 1.6; color: #444;\">\n\n    <p>\n      Halo <strong>{{ $json.Nama }}</strong>,\n    </p>\n\n    <p>\n      Terima kasih telah menunggu. Kami ingin menginformasikan bahwa\n      pengajuan Anda yang dikirim pada\n      <strong>{{ $json.Timestamp }}</strong>\n      telah selesai ditinjau oleh <strong>Atasan dan HR</strong>.\n    </p>\n\n    <!-- Divider -->\n    <div style=\"border-top: 1px solid #e0e0e0; margin: 25px 0;\"></div>\n\n    <!-- Status -->\n    <div style=\"\n      padding: 16px;\n      text-align: center;\n      border-radius: 6px;\n      background-color: {{ $json[\"Status HR\"] == \"Ditolak\" ? \"#f8d7da\" : \"#d4edda\" }};\ncolor: {{ $json[\"Status HR\"] == \"Ditolak\" ? \"#721c24\" : \"#155724\" }};\n\n      font-size: 20px;\n      font-weight: bold;\n      border: 1px solid #e0e0e0;\n    \">\n      {{ $json[\"Status HR\"] }}\n    </div>\n\n    <!-- Divider -->\n    <div style=\"border-top: 1px solid #e0e0e0; margin: 25px 0;\"></div>\n\n  <!-- Footer -->\n  <div style=\"\n    background-color: #f8f9fa;\n    padding: 15px;\n    text-align: center;\n    font-size: 12px;\n    color: #999;\n    border-top: 1px solid #e0e0e0;\n  \">\n    Jika Anda memiliki pertanyaan lebih lanjut,\n    silakan hubungi bagian HR.\n  </div>\n\n</div>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        1040
+      ],
+      "id": "a847405d-7da4-4d84-ae17-06bc8d4579ae",
+      "name": "Send an Email5",
+      "webhookId": "a9930d88-f446-48a4-b7ce-9cd77e15b87e",
+      "credentials": {
+        "smtp": {
+          "id": "fLQVZ37sRTwx0tk5",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "dana@in.agson.co.id",
+        "toEmail": "={{ $json['Email Address'] }}",
+        "subject": "=Pengajuan izin anda pada {{ $json.Timestamp }}",
+        "html": "=<p>Halo {{ $json[\"Nama\"] }},</p>  <p>Terima kasih. Lampiran susulan Anda dengan ID <strong>{{ $json[\"ID Unik\"] }}</strong> telah berhasil kami terima dalam sistem.</p>  <p>Dokumen ini akan segera ditinjau oleh tim HR dan Atasan sebagai kelengkapan administrasi pengajuan Anda. Anda tidak perlu melakukan tindakan apa pun lagi saat ini.</p>  <p>Salam,<br> <strong>Sistem Administrasi HR</strong></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        1216
+      ],
+      "id": "24d69085-5a4d-4d5d-b4af-c3ed5c96dd87",
+      "name": "Send an Email6",
+      "webhookId": "417b5562-4c72-4149-817a-8bbe60f36a9a",
+      "credentials": {
+        "smtp": {
+          "id": "fLQVZ37sRTwx0tk5",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "dana@in.agson.co.id",
+        "toEmail": "={{ $json['Email Atasan'] }}, change3130@gmail.com",
+        "subject": "=Lampiran Susulan dari {{ $json[\"Nama\"] }} pada {{ $json.Timestamp }}",
+        "html": "=<p>Halo Bapak/Ibu Atasan dan Tim HR,</p>  <p>Sistem mendeteksi adanya pembaruan dokumen (Lampiran Susulan) untuk pengajuan berikut:</p>  <ul>   <li><strong>Nama Karyawan:</strong> {{ $json[\"Nama\"] }}</li>   <li><strong>ID Unik:</strong> {{ $json[\"ID Unik\"] }}</li>   <li><strong>Jenis Pengajuan:</strong> {{ $json[\"Jenis Izin\"] }}</li> </ul>  <p>Silakan tinjau dokumen susulan tersebut melalui tautan di bawah ini:</p> <p><a href=\"{{ $json['Lampiran Susulan'] }}\" style=\"background-color: #008CBA; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">Lihat Lampiran Susulan</a></p>  <p>Mohon segera ditindaklanjuti untuk proses verifikasi lebih lanjut.</p> <hr> <p><em>Email otomatis dari Sistem Pengajuan n8n.</em></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        1392
+      ],
+      "id": "064ac64d-82d2-46c3-a85c-32391728835e",
+      "name": "Send an Email7",
+      "webhookId": "8c333c92-1b82-46bc-ada7-3cf750ebf151",
+      "credentials": {
+        "smtp": {
+          "id": "fLQVZ37sRTwx0tk5",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Konversi serial number Google Sheets / Excel ke Date object\nfunction excelToDate(value) {\n  if (value === null || value === undefined || value === '' || isNaN(value)) {\n    return null;\n  }\n  return new Date(Math.round((value - 25569) * 86400 * 1000));\n}\n\n// Format tanggal: DD/MM/YYYY\nfunction formatDate(date) {\n  return date.toLocaleDateString('id-ID');\n}\n\n// Format jam: HH:mm\nfunction formatTime(date) {\n  return date.toLocaleTimeString('id-ID', {\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false,\n  });\n}\n\n// Format timestamp: DD/MM/YYYY HH:mm:ss\nfunction formatTimestamp(date) {\n  return date.toLocaleString('id-ID', {\n    hour12: false,\n  });\n}\n\nreturn items.map(item => {\n  // === TANGGAL IZIN ===\n  const tglIzin = excelToDate(item.json[\"Tanggal Izin\"]);\n  if (tglIzin) {\n    item.json[\"Tanggal Izin\"] = formatDate(tglIzin);\n  }\n\n  // === SAMPAI ===\n  const sampai = excelToDate(item.json[\"Sampai\"]);\n  if (sampai) {\n    item.json[\"Sampai\"] = formatDate(sampai);\n  }\n\n  // === TIMESTAMP (tanggal + jam) ===\n  const timestamp = excelToDate(item.json[\"Timestamp\"]);\n  if (timestamp) {\n    item.json[\"Timestamp\"] = formatTimestamp(timestamp);\n  }\n\n  // === JAM MULAI ===\n  const jamMulai = excelToDate(item.json[\"Jam Mulai\"]);\n  if (jamMulai) {\n    item.json[\"Jam Mulai\"] = formatTime(jamMulai);\n  }\n\n  // === JAM SELESAI ===\n  const jamSelesai = excelToDate(item.json[\"Jam Selesai\"]);\n  if (jamSelesai) {\n    item.json[\"Jam Selesai\"] = formatTime(jamSelesai);\n  }\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        976
+      ],
+      "id": "6a7bd694-ffaa-4c4d-87b8-7734c91b9e79",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit?resourcekey=&gid=708921683#gid=708921683",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 708921683,
+          "mode": "list",
+          "cachedResultName": "Pengajuan",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rkTghHlQSyBHR2krcpkuW7nzqcclDUYbDt5VgcDybyw/edit#gid=708921683"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "ID Unik"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID Unik",
+              "displayName": "ID Unik",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email Address",
+              "displayName": "Email Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NIK",
+              "displayName": "NIK",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nama",
+              "displayName": "Nama",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tanggal Izin",
+              "displayName": "Tanggal Izin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sampai",
+              "displayName": "Sampai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jam Mulai",
+              "displayName": "Jam Mulai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jam Selesai",
+              "displayName": "Jam Selesai",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Jenis Izin",
+              "displayName": "Jenis Izin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Durasi",
+              "displayName": "Durasi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Keterangan",
+              "displayName": "Keterangan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lampiran",
+              "displayName": "Lampiran",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lampiran Susulan",
+              "displayName": "Lampiran Susulan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Atasan",
+              "displayName": "Email Atasan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status Atasan",
+              "displayName": "Status Atasan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status HR",
+              "displayName": "Status HR",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notif Atasan",
+              "displayName": "Notif Atasan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notif Keputusan",
+              "displayName": "Notif Keputusan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notif Susulan",
+              "displayName": "Notif Susulan",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -544,
+        1232
+      ],
+      "id": "01a7f482-9be3-411f-8f18-95f5126cfe63",
+      "name": "Update row in sheet5",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "luHaPjby5Or3Mg7l",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Konversi serial number Google Sheets / Excel ke Date object\nfunction excelToDate(value) {\n  if (value === null || value === undefined || value === '' || isNaN(value)) {\n    return null;\n  }\n  return new Date(Math.round((value - 25569) * 86400 * 1000));\n}\n\n// Format tanggal: DD/MM/YYYY\nfunction formatDate(date) {\n  return date.toLocaleDateString('id-ID');\n}\n\n// Format jam: HH:mm\nfunction formatTime(date) {\n  return date.toLocaleTimeString('id-ID', {\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false,\n  });\n}\n\n// Format timestamp: DD/MM/YYYY HH:mm:ss\nfunction formatTimestamp(date) {\n  return date.toLocaleString('id-ID', {\n    hour12: false,\n  });\n}\n\nreturn items.map(item => {\n  // === TANGGAL IZIN ===\n  const tglIzin = excelToDate(item.json[\"Tanggal Izin\"]);\n  if (tglIzin) {\n    item.json[\"Tanggal Izin\"] = formatDate(tglIzin);\n  }\n\n  // === SAMPAI ===\n  const sampai = excelToDate(item.json[\"Sampai\"]);\n  if (sampai) {\n    item.json[\"Sampai\"] = formatDate(sampai);\n  }\n\n  // === TIMESTAMP (tanggal + jam) ===\n  const timestamp = excelToDate(item.json[\"Timestamp\"]);\n  if (timestamp) {\n    item.json[\"Timestamp\"] = formatTimestamp(timestamp);\n  }\n\n  // === JAM MULAI ===\n  const jamMulai = excelToDate(item.json[\"Jam Mulai\"]);\n  if (jamMulai) {\n    item.json[\"Jam Mulai\"] = formatTime(jamMulai);\n  }\n\n  // === JAM SELESAI ===\n  const jamSelesai = excelToDate(item.json[\"Jam Selesai\"]);\n  if (jamSelesai) {\n    item.json[\"Jam Selesai\"] = formatTime(jamSelesai);\n  }\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        1232
+      ],
+      "id": "dd84bf92-1cd8-4ada-be2a-e92322300a9f",
+      "name": "Code in JavaScript3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update row in sheet2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update row in sheet5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send an Email2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Send an Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If8": {
+      "main": [
+        [
+          {
+            "node": "Send an Email3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "Send an Email4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If10": {
+      "main": [
+        [
+          {
+            "node": "Send an Email5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If12": {
+      "main": [
+        [
+          {
+            "node": "Send an Email6",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send an Email7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email": {
+      "main": [
+        []
+      ]
+    },
+    "Send an Email2": {
+      "main": [
+        []
+      ]
+    },
+    "Email Atasan": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email4": {
+      "main": [
+        []
+      ]
+    },
+    "Send an Email5": {
+      "main": [
+        []
+      ]
+    },
+    "Send an Email7": {
+      "main": [
+        []
+      ]
+    },
+    "Send an Email6": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "If12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "94faca11-ab86-42ac-8392-1373ffaef61e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "57c18c5e335d8cd55b8540220552453c85d7b3fb40ed073b704a779f395d12b0"
+  },
+  "id": "hccIgzm4PT4omAPGAcDxC",
+  "tags": []
+}
